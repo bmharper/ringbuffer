@@ -7,7 +7,7 @@ import (
 )
 
 func dump(t *testing.T, r *Ring) {
-	t.Logf("%v %v %v %v\n", r.mask, r.tail, r.head, r.data)
+	t.Logf("%v %v %v %v\n", r.mask(), r.tail, r.head, r.data)
 }
 
 // Returns the content of the buffer without modifying it
@@ -103,7 +103,7 @@ func TestDirectWrite(t *testing.T) {
 	}
 	b2 := r.DirectWrite(4)
 	if len(b2) != 4 {
-		t.Errorf("DirectWrite wraparound failed. Expected len %v, got %v. %v,%v,%v", 4, len(b2), r.mask, r.tail, r.head)
+		t.Errorf("DirectWrite wraparound failed. Expected len %v, got %v. %v,%v,%v", 4, len(b2), r.mask(), r.tail, r.head)
 	}
 }
 
