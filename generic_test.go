@@ -41,13 +41,22 @@ func TestRingT(t *testing.T) {
 			id:     nextID,
 			weight: weight,
 		}
+		nextID++
 		for valW+weight > ring.MaxWeight && len(val) != 0 {
-			val = val[1:]
 			valW -= val[0].weight
+			val = val[1:]
 		}
 		val = append(val, t)
 		valW += weight
 		ring.Add(weight, t)
+	}
+
+	chomp := func() {
+		_, actual, actualW := ring.Next()
+		require.Equal(t, val[0], actual)
+		require.Equal(t, val[0].weight, actualW)
+		valW -= val[0].weight
+		val = val[1:]
 	}
 
 	t.Logf("empty")
@@ -61,15 +70,26 @@ func TestRingT(t *testing.T) {
 
 	clear()
 	t.Logf("add i at a time")
-	for i := 0; i < 30; i++ {
-		t.Logf("add %v", i)
-		add(i)
+	for i := 0; i < 50; i++ {
+		//t.Logf("add %v", i)
+		add(i % (ring.MaxWeight + 1))
 		validate()
 	}
 
 	clear()
-	for i := 0; i < 9; i++ {
-		add(6)
+	for i := 0; i < 3; i++ {
+		add(9)
 		validate()
 	}
+
+	clear()
+	add(2)
+	add(3)
+	add(4)
+	validate()
+	for i := 0; i < 3; i++ {
+		chomp()
+	}
+	validate()
+
 }
