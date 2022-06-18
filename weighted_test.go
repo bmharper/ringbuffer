@@ -14,14 +14,14 @@ type thing struct {
 func TestRingT(t *testing.T) {
 	val := []*thing{}
 	valW := 0
-	ring := NewRingT[thing](10)
+	ring := NewWeightedRingT[thing](10)
 
 	nextID := 0
 
 	clear := func() {
 		val = []*thing{}
 		valW = 0
-		ring = NewRingT[thing](10)
+		ring = NewWeightedRingT[thing](10)
 	}
 
 	validate := func() {
@@ -52,11 +52,18 @@ func TestRingT(t *testing.T) {
 	}
 
 	chomp := func() {
-		_, actual, actualW := ring.Next()
-		require.Equal(t, val[0], actual)
-		require.Equal(t, val[0].weight, actualW)
-		valW -= val[0].weight
-		val = val[1:]
+		expectEmpty := len(val) == 0
+		ok, actual, actualW := ring.Next()
+		if expectEmpty {
+			require.Equal(t, false, ok)
+			require.Equal(t, actual, nil)
+			require.Equal(t, actualW, 0)
+		} else {
+			require.Equal(t, val[0], actual)
+			require.Equal(t, val[0].weight, actualW)
+			valW -= val[0].weight
+			val = val[1:]
+		}
 	}
 
 	t.Logf("empty")
@@ -91,5 +98,4 @@ func TestRingT(t *testing.T) {
 		chomp()
 	}
 	validate()
-
 }

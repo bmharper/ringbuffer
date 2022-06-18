@@ -1,6 +1,7 @@
 package ringbuffer
 
-// example
+// Example
+//
 // length: 8
 // tail:   1
 // head:   3
@@ -9,8 +10,14 @@ package ringbuffer
 // 0      1      2      3      4      5      6      7
 //      tail          head
 
-// RingT is a generic ring buffer that holds points to a generic type T
-type RingT[T any] struct {
+// WeightedRingT is a generic ring buffer that holds pointers to a generic type T.
+// Each element has a "weight", and we make sure that the total weight of all
+// elements inside the ring never exceed MaxWeight. The number of items in the ring
+// is not constrained, so adding elements with zero weight will eventually
+// exhaust all memory.
+// When popping an item from the tail of the ring, we set it's pointer to nil,
+// to ensure that the garbage collector can reclaim the memory for that item.
+type WeightedRingT[T any] struct {
 	MaxWeight int   // we guarantee that weight <= MaxWeight
 	weight    int   // current weight
 	items     []*T  // len(items) == len(weights). len(items) is a power of 2.
@@ -19,25 +26,25 @@ type RingT[T any] struct {
 	head      uint  // write into head
 }
 
-// NewRingT creates a new ring buffer with the specified maximum weight
-func NewRingT[T any](maxWeight int) RingT[T] {
-	return RingT[T]{
+// NewWeightedRingT creates a new ring buffer with the specified maximum weight
+func NewWeightedRingT[T any](maxWeight int) WeightedRingT[T] {
+	return WeightedRingT[T]{
 		MaxWeight: maxWeight,
 	}
 }
 
 // Len returns the number of elements in the buffer
-func (r *RingT[T]) Len() int {
+func (r *WeightedRingT[T]) Len() int {
 	return int((r.head - r.tail) & r.mask())
 }
 
 // Weight returns the total weight of all items in the ring buffer
-func (r *RingT[T]) Weight() int {
+func (r *WeightedRingT[T]) Weight() int {
 	return r.weight
 }
 
 // Next returns the next item in the ring
-func (r *RingT[T]) Next() (haveItem bool, item *T, weight int) {
+func (r *WeightedRingT[T]) Next() (haveItem bool, item *T, weight int) {
 	if r.Len() == 0 {
 		return false, nil, 0
 	}
@@ -49,16 +56,9 @@ func (r *RingT[T]) Next() (haveItem bool, item *T, weight int) {
 	return
 }
 
-// peek provides the Tail+i element from the buffer.
-// This is here for unit tests.
-func (r *RingT[T]) peek(i uint) (item *T, weight int) {
-	j := (r.tail + i) & r.mask()
-	return r.items[j], r.weights[j]
-}
-
 // Add an item to the buffer.
 // Before adding, delete enough items so that we can store this new one.
-func (r *RingT[T]) Add(weight int, item *T) {
+func (r *WeightedRingT[T]) Add(weight int, item *T) {
 	if len(r.items) == 0 || r.Len() == len(r.items)-1 {
 		// need to grow array
 		newSize := len(r.items) * 2
@@ -93,6 +93,13 @@ func (r *RingT[T]) Add(weight int, item *T) {
 	r.head = (r.head + 1) & r.mask()
 }
 
-func (r *RingT[T]) mask() uint {
+func (r *WeightedRingT[T]) mask() uint {
 	return uint(len(r.items)) - 1
+}
+
+// peek provides the Tail+i element from the buffer.
+// This is here for unit tests.
+func (r *WeightedRingT[T]) peek(i uint) (item *T, weight int) {
+	j := (r.tail + i) & r.mask()
+	return r.items[j], r.weights[j]
 }

@@ -1,5 +1,5 @@
 /*
-Package ringbuffer implements a circular byte buffer.
+Package ringbuffer implements a byte-based ring buffer and a generic item ring buffer.
 
 The ring buffer has the following properties:
 	* Total size is always a power of 2
