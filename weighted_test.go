@@ -27,12 +27,21 @@ func TestRingT(t *testing.T) {
 	validate := func() {
 		require.Equal(t, len(val), ring.Len())
 		require.Equal(t, valW, ring.Weight())
-		for i := uint(0); i < uint(len(val)); i++ {
-			actualT, actualW := ring.peek(i)
+		for i := 0; i < len(val); i++ {
+			actualExist, actualT, actualW := ring.Peek(i)
 			expectT := val[i]
 			expectW := val[i].weight
+			require.Equal(t, true, actualExist)
 			require.Equal(t, expectT, actualT)
 			require.Equal(t, expectW, actualW)
+		}
+		// verify that Peek(<invalid index>) returns 'no item'
+		invalidIndices := []int{-1, len(val), len(val) + 1}
+		for _, invalidI := range invalidIndices {
+			actualExist, actualT, actualW := ring.Peek(invalidI)
+			require.Equal(t, false, actualExist)
+			require.Nil(t, actualT)
+			require.Equal(t, 0, actualW)
 		}
 	}
 
