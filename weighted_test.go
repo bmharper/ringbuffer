@@ -11,7 +11,7 @@ type thing struct {
 	weight int
 }
 
-func TestRingT(t *testing.T) {
+func TestWeightedRingT(t *testing.T) {
 	val := []*thing{}
 	valW := 0
 	ring := NewWeightedRingT[thing](10)
@@ -65,7 +65,7 @@ func TestRingT(t *testing.T) {
 		ok, actual, actualW := ring.Next()
 		if expectEmpty {
 			require.Equal(t, false, ok)
-			require.Equal(t, actual, nil)
+			require.Nil(t, actual)
 			require.Equal(t, actualW, 0)
 		} else {
 			require.Equal(t, val[0], actual)
@@ -103,7 +103,7 @@ func TestRingT(t *testing.T) {
 	add(3)
 	add(4)
 	validate()
-	for i := 0; i < 3; i++ {
+	for i := 0; i < 5; i++ {
 		chomp()
 	}
 	validate()
